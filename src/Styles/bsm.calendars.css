@@ -1,0 +1,68 @@
+#divmanagecalendars{
+    width: 100%;
+    text-align: -webkit-center;
+}
+
+.divcalendarcell{
+    float: left;
+}
+
+.divcalendarstable{
+    text-align: -webkit-center;
+    padding-top: 20px;
+}
+
+#divCalendarTitle{
+    text-align: center;
+    font-size: 150%;
+}
+
+.divcalendarformelement{
+    margin-top: 10px;
+    float: left;
+    width: 50%;
+    display: flex;
+}
+
+.divcalendarlabel{
+    float: left;
+    margin-right: 10px;
+    width: 25%;
+}
+
+#configcalendarCommand{
+    clear: both;
+    margin-top: 70px;
+    justify-content: space-between;
+    display: flex;
+}
+
+.react-datepicker__current-month{
+    display: none;
+}
+
+#txtCalStartDate{
+    width: 100px;
+}
+
+#txtCalEndDate{
+    width: 100px;
+}
+
+.divColorPicker{
+    z-index: 10;
+    position: fixed;
+}
+
+.cover{
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+  }
+
+.popover{
+    position: 'fixed';
+    z-index: '2'
+  }
