@@ -7,6 +7,7 @@ import './../Styles/bsm.calendars.css';
 import { Dialog } from '@headlessui/react';
 import moment from 'moment';
 import 'moment/locale/it';
+import NotificationComponent from '../components/notification.component';
 
 
 export default class ManageCalendarsComponent extends React.Component<any, any> {
@@ -16,7 +17,9 @@ export default class ManageCalendarsComponent extends React.Component<any, any> 
             __calendars:[],
             __showDetail: false,
             __detailType: "none",
-            __selectcalendar: {}
+            __selectcalendar: {},
+            __filter: '',
+            __notification: false
         };
 
         
@@ -58,9 +61,33 @@ export default class ManageCalendarsComponent extends React.Component<any, any> 
         })
     }
 
-    _closeDetail = () => {}
+    _configcalendarSaved = (calendar: any) => {
+        // console.log(calendar);
+        // const tcalendars: any[] = this.state.__calendars.filter((cal: any) => {return cal.ID !== calendar.ID});
+        // tcalendars.push(calendar);
+        // this.setState({__calendars: tcalendars});
+        this.getCalendars();
+        this._showNotification({show: true, color: "green", message: "Calendario salvato", confirm: false});
+    }
 
+    _closeDetail = () => {}
     
+    _onNewCalendar = () => {
+        this.setState({
+            __showDetail: true,
+            __selectcalendar: {
+                ID: "NEW"
+            }
+        })
+    }
+
+    _showNotification = (value: {}) => {
+        this.setState({__notification: value})            
+      }
+
+    _onConfirmNotification = () => {
+    }
+
     render() {
 
         const _onclick = () => {
@@ -109,8 +136,13 @@ export default class ManageCalendarsComponent extends React.Component<any, any> 
 
         const renderCalendars = () => {
             if (this.state.__calendars !== undefined && this.state.__calendars.length > 0){
+                let allcalendars = this.state.__calendars;
+                if (this.state.__filter !== undefined && this.state.__filter.length > 0){
+                    allcalendars = this.state.__calendars.filter((cal: any) => {return cal.Name.toLowerCase().indexOf(this.state.__filter.toLowerCase()) > -1})
+                }
+                const ordercalendars = allcalendars.sort((a: any,b: any) => a.Name.localeCompare(b.Name));
                 return <div style={{marginTop: 10}}>
-                        {this.state.__calendars.map((calendar: any, index: number) =>{
+                        {ordercalendars.map((calendar: any, index: number) =>{
                             return <a key={index} onClick={() => this._calendarclick(calendar.ID)}>
                                     <div  style={{display: "flex", height: 30, marginBottom: 5}} >
                                         
@@ -143,6 +175,7 @@ export default class ManageCalendarsComponent extends React.Component<any, any> 
                                 calendar={this.state.__selectcalendar} 
                                 CurrentResource={this.props.CurrentResource} 
                                 calendarClose={this._calendarclose.bind(this)}
+                                configcalendarSaved={this._configcalendarSaved.bind(this)}
                             />
                         </div>
                         </Dialog.Panel>
@@ -153,13 +186,31 @@ export default class ManageCalendarsComponent extends React.Component<any, any> 
         <div style={General.getElementStyle("bsm_c_pagetitle")} className='divPageTitle'>
             {General.getLabelByKey("Admin_ManageCalendar_PageTitle", this.props.CurrentResource)}
         </div>
+        <div style={{width: '100%'}}>
+                <NotificationComponent 
+                    notification={this.state.__notification} 
+                    showNotification={this._showNotification.bind(this)} 
+                    CurrentResource={this.props.CurrentResource}
+                    onConfirm={this._onConfirmNotification.bind(this)}
+                    />
+        </div>
         <div className='divcalendarstable' style={{width: '80%'}}>
             <div style={{display: "flex"}} >                
                 <div style={General.getElementStyle("bsm_c_columntitle",{width: "30%", float: "left", borderTopLeftRadius: 10, borderBottomLeftRadius: 10})}>{General.getLabelByKey("Admin_ManageCalendar_CalendarName", this.props.CurrentResource)}</div>
                 <div style={General.getElementStyle("bsm_c_columntitle",{width: "30%", float: "left"})}>{General.getLabelByKey("Admin_ManageCalendar_CalendarDescription", this.props.CurrentResource)}</div>
                 <div style={General.getElementStyle("bsm_c_columntitle",{width: "20%", float: "left"})}>{General.getLabelByKey("Admin_ManageCalendar_CalendarDueDate", this.props.CurrentResource)}</div>
                 <div style={General.getElementStyle("bsm_c_columntitle",{float: "none", flex: "auto", borderTopRightRadius:10, borderBottomRightRadius: 10})}>{General.getLabelByKey("Admin_ManageCalendar_CalendarEnabled", this.props.CurrentResource)}</div>  
+            </div>
+            <div  style={{display: "flex", height: 30, marginBottom: 5}} >
+                 <div style={{width: "30%", float: "left", borderTopLeftRadius: 10, borderBottomLeftRadius: 10}}>
+                    <input type='text' id='txtsearchName' style={{width: '90%', marginTop: 10}} value={this.state.__filter} onChange={e => this.setState({__filter: e.target.value})} />
                 </div>
+                <div style={{width: "30%", float: "left", borderTopLeftRadius: 10, borderBottomLeftRadius: 10}}>
+                    <button style={General.getElementStyle("btn-default",{borderRadius: 10, height: 30, width:250, marginTop: 5})} onClick={this._onNewCalendar}>
+                        {General.getLabelByKey("Admin_NavigationCalendarNewCalendar", this.props.CurrentResource)}
+                    </button>
+                </div>
+            </div>
             {renderCalendars()}
         </div>
             {renderDetail()}

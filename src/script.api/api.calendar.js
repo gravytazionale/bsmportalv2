@@ -3,6 +3,7 @@ import _appParameters from '../app.parameters.json';
 import $ from 'jquery'
 
 export default class apicalendar extends React.Component{  
+
     static GetCalendars = async (cacheUri, onlyenabled) =>{
         try {
             var user;
@@ -49,5 +50,29 @@ export default class apicalendar extends React.Component{
             
             }
 
+    }
+
+    static NewCalendar = async (cacheUri, dateformat, data) => {
+        try {
+            var user;
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            };
+            const requrl = _appParameters.apiurl + 'api/calendars/NewCalendar/?token=' + global.currentuser.Token + 
+            '&correlationid=' + global.correlationid + 
+            '&currentdateformat=' + dateformat;
+            console.log(requrl);
+            const response = await fetch(requrl, requestOptions)
+            const responseJson = await response.json();
+            return responseJson;
+            } 
+            catch (error) {
+            console.error(error.message);
+            } 
+            finally {
+            
+            }
     }
 }

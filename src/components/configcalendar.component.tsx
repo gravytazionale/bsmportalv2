@@ -13,20 +13,43 @@ import { it } from 'date-fns/locale/it';
 import Switch from "react-switch";
 import { SketchPicker } from 'react-color';
 import NotificationComponent from '../components/notification.component';
+import { resourceUsage } from 'process';
 registerLocale('it', it)
 
 export default class ConfigCalendarComponent extends React.Component<any, any> {
     constructor (props: any){
         super(props); 
+
+        let calendar = {
+            ID : "NEW",
+            Anonimous: false,
+            Confirm: false,
+            DateEnd: moment(Date()).format(("YYYY-MM-DDTHH:mm:ss")),
+            DateStart: moment(Date()).format(("YYYY-MM-DDTHH:mm:ss")),
+            Description: "",
+            Duration: 0,
+            Enabled: false,
+            MaxEntry: 0,
+            Name: "Nuovo Calendario",
+            PublicUrl: "",
+            Reservation: false,
+            Color: "#ffffff"
+            
+        }
+        if(this.props.calendar.ID !== "NEW"){
+            calendar = this.props.calendar
+        }
+
         this.state = {
-            __calendar:this.props.calendar,
+            __calendar:JSON.parse(JSON.stringify(calendar)),
+            __orcalendar: JSON.parse(JSON.stringify(calendar)),
             __startdate: new Date(),
             __showcolorPicker: false,
             __unsaved: false,
             __notification: {show: false, color: "", message: "", confirm: false}
         };
 
-        console.log(this.props.calendar)
+        console.log(this.props.calendar);
         
 
        
@@ -40,8 +63,8 @@ export default class ConfigCalendarComponent extends React.Component<any, any> {
     }
 
     _onchangetext(value: string, field: string){
-        var chcalendar: {} = this.state.__calendar;
-        Object.defineProperty(chcalendar, field, {value: value});
+        var chcalendar: {} = this.state.__calendar;  
+        Object.defineProperty(chcalendar, field, {value: value});        
         this.setState({__calendar: chcalendar, __unsaved: true});
         console.log(this.state.__calendar);
     }
@@ -98,17 +121,51 @@ export default class ConfigCalendarComponent extends React.Component<any, any> {
       }
 
       _saveCalendar = () => {
-        apicalendar.SaveCalendar(null, this.state.__calendar.ID, General.getLabelByKey("DateFormat", this.props.CurrentResource), this.state.__calendar).then(result => {
-            if (result !== undefined && result === true){
-                console.log("save successfull");
-                this.setState({__unsaved: false})
-                this._showNotification({show: true, color: "green", message: "Calendario salvato", confirm: false});
-            }
-            else {
-                this._showNotification({show: true, color: "red", message: "c'è stato un errore nel salvataggio", confirm: false});
-            }
-        });
+        if(this.state.__calendar.ID === "NEW"){
+            apicalendar.NewCalendar(null, General.getLabelByKey("DateFormat", this.props.CurrentResource), this.state.__calendar).then(result => {
+                if (result !== undefined && result === true){
+                    console.log(result);
+                    this.setState({__unsaved: false})
+                    this._showNotification({show: true, color: "green", message: "Calendario salvato", confirm: false});
+                    this.props.configcalendarSaved(this.state.__calendar);
+                }
+                else {
+                    this._showNotification({show: true, color: "red", message: "c'è stato un errore nel salvataggio", confirm: false});
+                }
+            });
+        }
+        else {
+            apicalendar.SaveCalendar(null, this.state.__calendar.ID, General.getLabelByKey("DateFormat", this.props.CurrentResource), this.state.__calendar).then(result => {
+                if (result !== undefined && result === true){
+                    console.log("save successfull");
+                    this.setState({__unsaved: false})
+                    this._showNotification({show: true, color: "green", message: "Calendario salvato", confirm: false});
+                    this.props.configcalendarSaved(this.state.__calendar);
+                }
+                else {
+                    this._showNotification({show: true, color: "red", message: "c'è stato un errore nel salvataggio", confirm: false});
+                }
+            });
+        }
+        
 
+      }
+
+      _onConfirmNotification = () => {
+        this.setState({
+            __unsaved: false,
+            __notification: {show: false, color: "", message: "", confirm: false},
+            __calendar:JSON.parse(JSON.stringify(this.props.calendar))
+        });
+        
+        
+        this.props.calendarClose();
+      }
+
+      _onPublicUrl = () => {
+        const publicurl = General.makeid(10);
+        this._onchangetext(publicurl, "PublicUrl");
+        this._showNotification({show: true, color: "green", message: "è stato creato l'indirizzo pubblico", confirm: false});
       }
 
 
@@ -126,7 +183,7 @@ export default class ConfigCalendarComponent extends React.Component<any, any> {
                     notification={this.state.__notification} 
                     showNotification={this._showNotification.bind(this)} 
                     CurrentResource={this.props.CurrentResource}
-                    onConfirm={this._saveCalendar.bind(this)}
+                    onConfirm={this._onConfirmNotification.bind(this)}
                     />
             </div>
             <div className='divcalendarformelement'>
@@ -239,11 +296,11 @@ export default class ConfigCalendarComponent extends React.Component<any, any> {
                 </div>                
             </div>
             <div id="configcalendarCommand">
-                <button style={General.getElementStyle("btn-default",{borderRadius: 10, height: 30, width:150})}>
+                <button style={General.getElementStyle("btn-default",{borderRadius: 10, height: 30, width:150})} onClick={this._onPublicUrl}>
                     {General.getLabelByKey("Label_CalendarPublic", this.props.CurrentResource)}
                 </button>
                
-                <button style={General.getElementStyle("btn-default",{borderRadius: 10, height: 30, width:150})}>
+                <button style={General.getElementStyle("btn-default",{borderRadius: 10, height: 30, width:150})} onClick={() => this._onchangebool(!this.state.__calendar.Enabled, 'Enabled')}>
                     {this.state.__calendar.Enabled ?
                         General.getLabelByKey("Button_Unable", this.props.CurrentResource):
                         General.getLabelByKey("Button_Enable", this.props.CurrentResource)
